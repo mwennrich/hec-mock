@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: hec-mock
+  name: hec-mock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hec-mock
+  serviceName: hec-mock
+  template:
+    metadata:
+      labels:
+        app: hec-mock
+    spec:
+      containers:
+      - image: mwennrich/hec-mock:latest
+        imagePullPolicy: Always
+        name: hec-mock
+        ports:
+        - containerPort: 8080
+          name: hec-mock
+          protocol: TCP
