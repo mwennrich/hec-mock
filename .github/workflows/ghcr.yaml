@@ -1,5 +1,5 @@
 ---
-name: Docker Build Action
+name: GHCR Build Action
 on:
   pull_request:
     branches:
@@ -38,9 +38,7 @@ jobs:
         cache: false
 
     - name: Lint
-      uses: golangci/golangci-lint-action@v6
-      with:
-        args: --build-tags integration -p bugs -p unused --timeout=3m
+      uses: golangci/golangci-lint-action@v8
 
     - name: Make tag
       run: |
