@@ -35,9 +35,8 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/services/collector/event", hecHandler)
-	mux.HandleFunc("/services/collector", hecHandler)
+	http.HandleFunc("/services/collector/event", hecHandler)
+	http.HandleFunc("/services/collector", hecHandler)
 
 	server := &http.Server{
 		Addr:              ":8080",
