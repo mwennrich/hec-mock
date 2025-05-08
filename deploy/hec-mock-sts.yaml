@@ -16,7 +16,7 @@ spec:
         app: hec-mock
     spec:
       containers:
-      - image: mwennrich/hec-mock:latest
+      - image: ghcr.io/mwennrich/hec-mock:latest
         imagePullPolicy: Always
         name: hec-mock
         ports:
