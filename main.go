@@ -6,17 +6,23 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
+var file *os.File
+
 func hecHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
+	defer r.Body.Close()
 	if err != nil {
 		log.Println("Error reading body:", err)
 		http.Error(w, "can't read body %w", http.StatusBadRequest)
 		return
 	}
-
+	if file != nil {
+		fmt.Fprintln(file, string(body))
+	}
 	fmt.Println(string(body))
 
 	resp := map[string]interface{}{
@@ -35,6 +41,17 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	outputFile := os.Getenv("OUTPUT")
+	if outputFile == "" {
+		file, err := os.OpenFile(outputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatal("Error opening file:", err)
+			return
+		}
+		defer file.Close()
+	}
+
 	http.HandleFunc("/services/collector/event", hecHandler)
 	http.HandleFunc("/services/collector", hecHandler)
 
