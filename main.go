@@ -6,17 +6,37 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"sync"
 	"time"
 )
 
+var file *os.File
+var fileMutex sync.RWMutex
+
 func hecHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 	if err != nil {
 		log.Println("Error reading body:", err)
 		http.Error(w, "can't read body %w", http.StatusBadRequest)
 		return
 	}
-
+	if file != nil {
+		fileMutex.Lock()
+		defer fileMutex.Unlock()
+		_, err := fmt.Fprintln(file, string(body))
+		if err != nil {
+			log.Println("Error writing to file:", err)
+			http.Error(w, "can't write to file %w", http.StatusInternalServerError)
+			return
+		}
+	}
 	fmt.Println(string(body))
 
 	resp := map[string]interface{}{
@@ -35,6 +55,23 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	outputFile := os.Getenv("OUTPUT")
+	if outputFile != "" {
+		var err error
+		file, err = os.OpenFile(outputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatal("Error opening file:", err)
+			return
+		}
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
+	}
+
 	http.HandleFunc("/services/collector/event", hecHandler)
 	http.HandleFunc("/services/collector", hecHandler)
 
