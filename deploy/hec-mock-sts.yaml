@@ -19,7 +19,25 @@ spec:
       - image: ghcr.io/mwennrich/hec-mock:latest
         imagePullPolicy: Always
         name: hec-mock
+        env:
+          - name: OUTPUT
+            value: /logs/hec-mock.log
         ports:
         - containerPort: 8080
           name: hec-mock
           protocol: TCP
+        volumeMounts:
+        - mountPath: /logs
+          name: storage
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: storage
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi
+      storageClassName: partition-silver

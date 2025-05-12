@@ -9,7 +9,7 @@ WORKDIR /work
 RUN go build -o hec-mock main.go
 RUN strip -s hec-mock
 
-FROM scratch
+FROM busybox
 COPY --from=builder /work/hec-mock /hec-mock
 
 USER 999
