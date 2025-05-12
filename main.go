@@ -54,7 +54,8 @@ func main() {
 
 	outputFile := os.Getenv("OUTPUT")
 	if outputFile != "" {
-		file, err := os.OpenFile(outputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		var err error
+		file, err = os.OpenFile(outputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Fatal("Error opening file:", err)
 			return
