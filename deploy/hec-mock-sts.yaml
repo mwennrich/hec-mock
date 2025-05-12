@@ -15,6 +15,8 @@ spec:
       labels:
         app: hec-mock
     spec:
+      securityContext:
+        fsGroup: 999
       containers:
       - image: ghcr.io/mwennrich/hec-mock:latest
         imagePullPolicy: Always
