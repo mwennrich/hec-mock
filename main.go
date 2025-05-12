@@ -31,7 +31,6 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 		fileMutex.Lock()
 		defer fileMutex.Unlock()
 		_, err := fmt.Fprintln(file, string(body))
-		fileMutex.Unlock()
 		if err != nil {
 			log.Println("Error writing to file:", err)
 			http.Error(w, "can't write to file %w", http.StatusInternalServerError)
