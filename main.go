@@ -14,14 +14,24 @@ var file *os.File
 
 func hecHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 	if err != nil {
 		log.Println("Error reading body:", err)
 		http.Error(w, "can't read body %w", http.StatusBadRequest)
 		return
 	}
 	if file != nil {
-		fmt.Fprintln(file, string(body))
+		_, err := fmt.Fprintln(file, string(body))
+		if err != nil {
+			log.Println("Error writing to file:", err)
+			http.Error(w, "can't write to file %w", http.StatusInternalServerError)
+			return
+		}
 	}
 	fmt.Println(string(body))
 
@@ -43,13 +53,18 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	outputFile := os.Getenv("OUTPUT")
-	if outputFile == "" {
+	if outputFile != "" {
 		file, err := os.OpenFile(outputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Fatal("Error opening file:", err)
 			return
 		}
-		defer file.Close()
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
 	}
 
 	http.HandleFunc("/services/collector/event", hecHandler)
