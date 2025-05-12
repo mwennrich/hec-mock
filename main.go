@@ -7,10 +7,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 )
 
 var file *os.File
+var fileMutex sync.RWMutex
 
 func hecHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
@@ -26,7 +28,10 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if file != nil {
+		fileMutex.Lock()
+		defer fileMutex.Unlock()
 		_, err := fmt.Fprintln(file, string(body))
+		fileMutex.Unlock()
 		if err != nil {
 			log.Println("Error writing to file:", err)
 			http.Error(w, "can't write to file %w", http.StatusInternalServerError)
