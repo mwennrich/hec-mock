@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,9 +19,14 @@ var (
 )
 
 func hecHandler(w http.ResponseWriter, r *http.Request) {
-	if hecToken != "" && r.Header.Get("Authorization") != "Splunk "+hecToken {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
+	if hecToken != "" {
+		receivedAuth := r.Header.Get("Authorization")
+		expectedAuth := "Splunk " + hecToken
+
+		if len(receivedAuth) != len(expectedAuth) || subtle.ConstantTimeCompare([]byte(receivedAuth), []byte(expectedAuth)) != 1 {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 	}
 	body, err := io.ReadAll(r.Body)
 	defer func() {
