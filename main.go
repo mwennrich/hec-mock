@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	file     *os.File
+	file      *os.File
 	fileMutex sync.RWMutex
-	hecToken string
+	hecToken  string
 )
 
 func hecHandler(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +31,7 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 	if err != nil {
 		log.Println("Error reading body:", err)
-		http.Error(w, "can't read body %w", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("can't read body: %q", err), http.StatusBadRequest)
 		return
 	}
 	if file != nil {
@@ -40,7 +40,7 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintln(file, string(body))
 		if err != nil {
 			log.Println("Error writing to file:", err)
-			http.Error(w, "can't write to file %w", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("can't write to file: %q", err), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -56,7 +56,7 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		log.Println("Error encoding response:", err)
-		http.Error(w, "can't encode response %w", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("can't encode response: %q", err), http.StatusInternalServerError)
 		return
 	}
 }
