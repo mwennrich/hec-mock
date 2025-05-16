@@ -8,3 +8,4 @@ hec-mock is a simple mock server for HEC (HTTP Event Collector) that can be used
 - simple to use
 - dumps all received events to stdout
 - optional: dump events to a file
+- optional: check authorization hec token

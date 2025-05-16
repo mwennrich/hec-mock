@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,10 +12,22 @@ import (
 	"time"
 )
 
-var file *os.File
-var fileMutex sync.RWMutex
+var (
+	file      *os.File
+	fileMutex sync.RWMutex
+	hecToken  string
+)
 
 func hecHandler(w http.ResponseWriter, r *http.Request) {
+	if hecToken != "" {
+		receivedAuth := r.Header.Get("Authorization")
+		expectedAuth := "Splunk " + hecToken
+
+		if len(receivedAuth) != len(expectedAuth) || subtle.ConstantTimeCompare([]byte(receivedAuth), []byte(expectedAuth)) != 1 {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+	}
 	body, err := io.ReadAll(r.Body)
 	defer func() {
 		err := r.Body.Close()
@@ -24,7 +37,7 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 	if err != nil {
 		log.Println("Error reading body:", err)
-		http.Error(w, "can't read body %w", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("can't read body: %q", err), http.StatusBadRequest)
 		return
 	}
 	if file != nil {
@@ -33,7 +46,7 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintln(file, string(body))
 		if err != nil {
 			log.Println("Error writing to file:", err)
-			http.Error(w, "can't write to file %w", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("can't write to file: %q", err), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -49,12 +62,14 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		log.Println("Error encoding response:", err)
-		http.Error(w, "can't encode response %w", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("can't encode response: %q", err), http.StatusInternalServerError)
 		return
 	}
 }
 
 func main() {
+
+	hecToken = os.Getenv("HEC_TOKEN")
 
 	outputFile := os.Getenv("OUTPUT")
 	if outputFile != "" {
