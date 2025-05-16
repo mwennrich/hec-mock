@@ -22,8 +22,12 @@ spec:
         imagePullPolicy: Always
         name: hec-mock
         env:
+          # LEAVE THIS BLANK FOR OUTPUT TO STDOUT ONLY
           - name: OUTPUT
             value: /logs/hec-mock.log
+          # CHANGE THIS TO YOUR TOKEN, LEAVE IT BLANK FOR NO TOKEN VERIFICATION
+          - name: HEC_TOKEN
+            value: bla
         ports:
         - containerPort: 8080
           name: hec-mock
