@@ -12,7 +12,7 @@ import (
 )
 
 var file *os.File
-var fileMutex sync.RWMutex
+var logMutex sync.RWMutex
 
 func hecHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
@@ -27,17 +27,18 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't read body %w", http.StatusBadRequest)
 		return
 	}
+	logMutex.Lock()
 	if file != nil {
-		fileMutex.Lock()
-		defer fileMutex.Unlock()
 		_, err := fmt.Fprintln(file, string(body))
 		if err != nil {
 			log.Println("Error writing to file:", err)
 			http.Error(w, "can't write to file %w", http.StatusInternalServerError)
+			logMutex.Unlock()
 			return
 		}
 	}
 	fmt.Println(string(body))
+	logMutex.Unlock()
 
 	resp := map[string]interface{}{
 		"text":  "Success",
