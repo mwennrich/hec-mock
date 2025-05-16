@@ -11,10 +11,17 @@ import (
 	"time"
 )
 
-var file *os.File
-var logMutex sync.RWMutex
+var (
+	file     *os.File
+	logMutex sync.RWMutex
+	hecToken string
+)
 
 func hecHandler(w http.ResponseWriter, r *http.Request) {
+	if hecToken != "" && r.Header.Get("Authorization") != "Splunk "+hecToken {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	body, err := io.ReadAll(r.Body)
 	defer func() {
 		err := r.Body.Close()
@@ -56,6 +63,8 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	hecToken = os.Getenv("HEC_TOKEN")
 
 	outputFile := os.Getenv("OUTPUT")
 	if outputFile != "" {
