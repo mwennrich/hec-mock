@@ -52,7 +52,7 @@ func hecHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(string(body))
 
-	resp := map[string]interface{}{
+	resp := map[string]any{
 		"text":  "Success",
 		"code":  0,
 		"ackId": 1234,
